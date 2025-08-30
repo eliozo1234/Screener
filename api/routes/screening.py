@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
-from ..models.user import db
-from ..models.ticker import Ticker
-from ..models.price import Price
-from ..models.saved_search import SavedSearch
+from api.models.user import db
+from api.models.ticker import Ticker
+from api.models.price import Price
+from api.models.saved_search import SavedSearch
 from sqlalchemy import func, and_, desc
 from datetime import datetime, timedelta
 import json
