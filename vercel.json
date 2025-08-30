@@ -1,10 +1,28 @@
 {
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/(.*)", "destination": "/" }
-  ],
+  "version": 2,
   "builds": [
-    { "src": "/api/main.py", "use": "@vercel/python" },
-    { "src": "/app/package.json", "use": "@vercel/static-build" }
-  ]
+    {
+      "src": "api/main.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb" }
+    },
+    {
+      "src": "app/package.json",
+      "use": "@vercel/next",
+      "config": { "distDir": "app/build" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/app/build/$1"
+    }
+  ],
+  "env": {
+    "PYTHON_VERSION": "3.9"
+  }
 }
