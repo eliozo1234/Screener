@@ -5,13 +5,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from src.models.user import db
-from src.models.ticker import Ticker
-from src.models.price import Price
-from src.models.saved_search import SavedSearch
-from src.routes.user import user_bp
-from src.routes.screening import screening_bp
-from src.routes.auth import auth_bp
+from api.models.user import db
+from api.models.ticker import Ticker
+from api.models.price import Price
+from api.models.saved_search import SavedSearch
+from api.routes.user import user_bp
+from api.routes.screening import screening_bp
+from api.routes.auth import auth_bp
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
@@ -25,7 +25,7 @@ app.register_blueprint(screening_bp, url_prefix='/api')
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
 # Configuration de la base de données
-app.config["os.getenv('DATABASE_URL')"] = "sqlite:///screening_actions.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///screening_actions.db"  # Corrigé la clé
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
@@ -37,7 +37,7 @@ with app.app_context():
 def serve(path):
     static_folder_path = app.static_folder
     if static_folder_path is None:
-            return "Static folder not configured", 404
+        return "Static folder not configured", 404
 
     if path != "" and os.path.exists(os.path.join(static_folder_path, path)):
         return send_from_directory(static_folder_path, path)
@@ -47,7 +47,6 @@ def serve(path):
             return send_from_directory(static_folder_path, 'index.html')
         else:
             return "index.html not found", 404
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
