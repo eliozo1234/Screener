@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
-from src.models.user import User, db
-from src.models.saved_search import SavedSearch
+from api.models.user import User, db
+from api.models.saved_search import SavedSearch
 
 auth_bp = Blueprint('auth', __name__)
 
