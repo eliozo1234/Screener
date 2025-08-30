@@ -3,26 +3,13 @@
   "builds": [
     {
       "src": "api/main.py",
-      "use": "@vercel/python",
-      "config": { "maxLambdaSize": "15mb" }
-    },
-    {
-      "src": "app/package.json",
-      "use": "@vercel/next",
-      "config": { "distDir": "app/build" }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/main.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/app/build/$1"
+      "dest": "api/main.py"
     }
-  ],
-  "env": {
-    "PYTHON_VERSION": "3.9"
-  }
+  ]
 }
