@@ -1,6 +1,5 @@
 import os
 import sys
-# DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, send_from_directory
@@ -9,23 +8,20 @@ from api.models.user import db
 from api.models.ticker import Ticker
 from api.models.price import Price
 from api.models.saved_search import SavedSearch
-from api.routes.user import user_bp
+from api.routes.user_routes import user_bp  # Changé de user à user_routes
 from api.routes.screening import screening_bp
 from api.routes.auth import auth_bp
 
-app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), '..', 'app', 'public'))
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'asdf#FGSgvasgf$5$WGT')
 
-# Activer CORS pour permettre les requêtes cross-origin
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# Enregistrer les blueprints
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(screening_bp, url_prefix='/api')
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
-# Configuration de la base de données
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///screening_actions.db"  # Corrigé la clé
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///screening_actions.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
@@ -49,4 +45,4 @@ def serve(path):
             return "index.html not found", 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=False)
