@@ -21,7 +21,7 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(screening_bp, url_prefix='/api')
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///screening_actions.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/screening_actions.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
