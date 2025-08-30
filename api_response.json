@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screener d'Actions - Eurostoxx 600 & S&P 500</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            max-width: 1400px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+        
+        .filters-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .results-section {
+            padding: 25px;
+            margin: 20px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .results-table {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+        }
+        
+        .spinner-border {
+            color: #667eea;
+        }
+        
+        .badge {
+            border-radius: 20px;
+            padding: 8px 15px;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-chart-line me-3"></i>Screener d'Actions Boursières</h1>
+                <p class="mb-0">Identifiez les actions proches de leurs plus hauts historiques - Eurostoxx 600 & S&P 500</p>
+            </div>
+            
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <h3 class="mb-4"><i class="fas fa-filter me-2"></i>Critères de Recherche</h3>
+                <form id="searchForm">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">Indices</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="sp500" id="sp500" checked>
+                                <label class="form-check-label" for="sp500">S&P 500</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="eurostoxx600" id="eurostoxx600" checked>
+                                <label class="form-check-label" for="eurostoxx600">Eurostoxx 600</label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="lookbackYears" class="form-label fw-bold">Période de Lookback</label>
+                            <select class="form-select" id="lookbackYears">
+                                <option value="1">1 an</option>
+                                <option value="3">3 ans</option>
+                                <option value="5" selected>5 ans</option>
+                                <option value="10">10 ans</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="thresholdPct" class="form-label fw-bold">Seuil (% de baisse max)</label>
+                            <input type="number" class="form-control" id="thresholdPct" value="50" min="1" max="100">
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="minMarketCap" class="form-label fw-bold">Market Cap Min (USD)</label>
+                            <input type="number" class="form-control" id="minMarketCap" value="1000000000" step="1000000000">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="volumePeriod" class="form-label fw-bold">Période Volume Moyen</label>
+                            <select class="form-select" id="volumePeriod">
+                                <option value="30" selected>30 jours</option>
+                                <option value="90">90 jours</option>
+                                <option value="180">180 jours</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="minVolume" class="form-label fw-bold">Volume Min</label>
+                            <input type="number" class="form-control" id="minVolume" value="100000" step="100000">
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="sortBy" class="form-label fw-bold">Trier par</label>
+                            <select class="form-select" id="sortBy">
+                                <option value="pct_of_high" selected>% du plus haut</option>
+                                <option value="market_cap">Market Cap</option>
+                                <option value="current_price">Prix actuel</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Rechercher
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="results-section">
+                <div id="loadingSection" class="loading d-none">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-3">Recherche en cours...</p>
+                </div>
+                
+                <div id="resultsSection" class="d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3><i class="fas fa-table me-2"></i>Résultats</h3>
+                        <div>
+                            <span id="resultsCount" class="badge bg-primary fs-6"></span>
+                            <button id="exportBtn" class="btn btn-outline-primary ms-2">
+                                <i class="fas fa-download me-2"></i>Exporter CSV
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive results-table">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Nom</th>
+                                    <th>Pays</th>
+                                    <th>Secteur</th>
+                                    <th>Prix Actuel</th>
+                                    <th>% du Plus Haut</th>
+                                    <th>Plus Haut</th>
+                                    <th>Date Plus Haut</th>
+                                    <th>Market Cap</th>
+                                    <th>Volume Moyen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="noResultsSection" class="text-center d-none">
+                    <div class="icon-box">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h4>Aucun résultat trouvé</h4>
+                    <p class="text-muted">Essayez d'ajuster vos critères de recherche. Notez que la plupart des actions dans notre base de données sont actuellement très proches de leurs plus hauts historiques (faible pourcentage de baisse), ce qui peut limiter les résultats pour des seuils de baisse élevés.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class StockScreener {
+            constructor() {
+                this.initEventListeners();
+            }
+            
+            initEventListeners() {
+                document.getElementById('searchForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.performSearch();
+                });
+                
+                document.getElementById('exportBtn').addEventListener('click', () => {
+                    this.exportToCSV();
+                });
+            }
+            
+            async performSearch() {
+                this.showLoading();
+                
+                try {
+                    const formData = this.getFormData();
+                    const response = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la recherche');
+                    }
+                    
+                    const data = await response.json();
+                    this.displayResults(data);
+                    
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    this.showError('Erreur lors de la recherche. Veuillez réessayer.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            getFormData() {
+                const indices = [];
+                if (document.getElementById('sp500').checked) indices.push('sp500');
+                if (document.getElementById('eurostoxx600').checked) indices.push('eurostoxx600');
+                
+                return {
+                    indices: indices,
+                    lookback_years: parseInt(document.getElementById('lookbackYears').value),
+                    threshold_pct: parseFloat(document.getElementById('thresholdPct').value),
+                    min_market_cap_usd: parseInt(document.getElementById('minMarketCap').value),
+                    min_volume: parseInt(document.getElementById('minVolume').value),
+                    volume_period: parseInt(document.getElementById('volumePeriod').value),
+                    sort_by: document.getElementById('sortBy').value
+                };
+            }
+            
+            displayResults(data) {
+                const resultsSection = document.getElementById('resultsSection');
+                const noResultsSection = document.getElementById('noResultsSection');
+                const resultsCount = document.getElementById('resultsCount');
+                const tableBody = document.getElementById('resultsTableBody');
+                
+                if (data.results && data.results.length > 0) {
+                    resultsCount.textContent = `${data.results.length} résultat(s)`;
+                    tableBody.innerHTML = '';
+                    
+                    data.results.forEach(stock => {
+                        const row = this.createTableRow(stock);
+                        tableBody.appendChild(row);
+                    });
+                    
+                    resultsSection.classList.remove('d-none');
+                    noResultsSection.classList.add('d-none');
+                    this.currentResults = data.results;
+                } else {
+                    resultsSection.classList.add('d-none');
+                    noResultsSection.classList.remove('d-none');
+                }
+            }
+            
+            createTableRow(stock) {
+                const row = document.createElement('tr');
+                
+                const formatCurrency = (value, currency = 'USD') => {
+                    if (!value) return '-';
+                    return new Intl.NumberFormat('fr-FR', {
+                        style: 'currency',
+                        currency: currency
+                    }).format(value);
+                };
+                
+                const formatNumber = (value) => {
+                    if (!value) return '-';
+                    return new Intl.NumberFormat('fr-FR').format(value);
+                };
+                
+                const formatMarketCap = (value) => {
+                    if (!value) return '-';
+                    if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T $`;
+                    if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B $`;
+                    if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M $`;
+                    return formatNumber(value);
+                };
+                
+                const pctColor = stock.pct_from_high >= -10 ? 'text-success' : 
+                                stock.pct_from_high >= -20 ? 'text-warning' : 'text-danger';
+                
+                row.innerHTML = `
+          
+(Content truncated due to size limit. Use page ranges or line ranges to read remaining content)
