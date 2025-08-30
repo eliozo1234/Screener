@@ -23,7 +23,7 @@ function App() {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/auth/me')
+      const response = await fetch(process.env.REACT_APP_API_URL || '/api')
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
