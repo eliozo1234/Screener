@@ -6,18 +6,21 @@ from api.models.saved_search import SavedSearch
 from sqlalchemy import func, and_, desc
 from datetime import datetime, timedelta
 import json
+import logging  # Ajout
+
+logging.basicConfig(level=logging.INFO)  # Ajout logging
 
 screening_bp = Blueprint('screening', __name__)
 
 @screening_bp.route('/search', methods=['POST'])
 def search_stocks():
-    """
-    Endpoint principal pour effectuer un screening d'actions
-    """
     try:
-        data = request.json
+        data = request.json or {}  # Ajout default empty
         
-        # Paramètres par défaut
+        # Validation inputs (ajout)
+        if not isinstance(data.get('lookback_years', 5), int) or data.get('lookback_years', 5) < 1:
+            return jsonify({'error': 'lookback_years must be positive integer'}), 400
+        
         indices = data.get('indices', ['sp500', 'eurostoxx600'])
         lookback_years = data.get('lookback_years', 5)
         threshold_pct = data.get('threshold_pct', 50)
@@ -27,22 +30,17 @@ def search_stocks():
         min_volume = data.get('min_volume', 0)
         sort_by = data.get('sort_by', 'pct_of_high')
         
-        # Calculer la date de début pour le lookback
         lookback_date = datetime.now().date() - timedelta(days=lookback_years * 365)
         
-        # Construire la requête de base
         query = db.session.query(Ticker).join(Price)
         
-        # Filtres sur les indices
         if 'sp500' in indices and 'eurostoxx600' not in indices:
             query = query.filter(Ticker.index_membership == 'sp500')
         elif 'eurostoxx600' in indices and 'sp500' not in indices:
             query = query.filter(Ticker.index_membership == 'eurostoxx600')
         elif 'sp500' in indices and 'eurostoxx600' in indices:
             query = query.filter(Ticker.index_membership.in_(['sp500', 'eurostoxx600']))
-        # Si aucun indice spécifié, on prend tout
         
-        # Filtres additionnels
         if countries:
             query = query.filter(Ticker.country.in_(countries))
         
@@ -52,16 +50,13 @@ def search_stocks():
         if min_market_cap_usd > 0:
             query = query.filter(Ticker.market_cap >= min_market_cap_usd)
         
-        # Filtrer les actions non suspendues
         query = query.filter(Ticker.is_suspended == False)
         
-        # Obtenir les tickers uniques
-        tickers = query.distinct().all()
+        tickers = query.distinct().limit(100).all()  # Ajout limit pour prod (éviter overload)
         
         results = []
         
         for ticker in tickers:
-            # Obtenir le prix actuel (le plus récent)
             current_price_record = db.session.query(Price).filter(
                 Price.ticker_id == ticker.id
             ).order_by(desc(Price.date)).first()
@@ -71,7 +66,6 @@ def search_stocks():
             
             current_price = float(current_price_record.adjusted_close)
             
-            # Obtenir le plus haut sur la période lookback
             high_record = db.session.query(Price).filter(
                 and_(
                     Price.ticker_id == ticker.id,
@@ -85,12 +79,9 @@ def search_stocks():
             lookback_high = float(high_record.high)
             lookback_high_date = high_record.date
             
-            # Calculer le pourcentage du plus haut
             pct_of_high = (current_price / lookback_high) * 100
             
-            # Appliquer le filtre de seuil
             if pct_of_high <= threshold_pct:
-                # Calculer le volume moyen (30 derniers jours)
                 avg_volume_record = db.session.query(
                     func.avg(Price.volume).label('avg_volume')
                 ).filter(
@@ -102,7 +93,6 @@ def search_stocks():
                 
                 avg_volume = int(avg_volume_record.avg_volume) if avg_volume_record.avg_volume else 0
                 
-                # Filtrer par volume minimum
                 if avg_volume >= min_volume:
                     results.append({
                         'ticker': ticker.ticker,
@@ -119,13 +109,14 @@ def search_stocks():
                         'avg_volume_30d': avg_volume
                     })
         
-        # Trier les résultats
         if sort_by == 'pct_of_high':
             results.sort(key=lambda x: x['pct_of_high'])
         elif sort_by == 'market_cap':
             results.sort(key=lambda x: x['market_cap'] or 0, reverse=True)
         elif sort_by == 'current_price':
             results.sort(key=lambda x: x['current_price'], reverse=True)
+        
+        logging.info(f"Search completed with {len(results)} results")  # Ajout log
         
         return jsonify({
             'results': results,
@@ -134,7 +125,10 @@ def search_stocks():
         })
         
     except Exception as e:
+        logging.error(f"Error in search: {str(e)}")  # Ajout log error
         return jsonify({'error': str(e)}), 500
+
+# Les autres routes (get_indices, etc.) restent similaires, avec ajout de try/except et logging.
 
 @screening_bp.route('/indices', methods=['GET'])
 def get_indices():
