@@ -3,15 +3,18 @@ import time
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+import os  # Ajout
+import backoff  # Ajout, ajoutez backoff==2.2.1 à requirements.txt
 
 class AlphaVantageClient:
-    """Client pour l'API Alpha Vantage"""
-    
-    def __init__(self, api_key: str):
-        self.api_key = api_key
+    def __init__(self, api_key: str = None):
+        self.api_key = api_key or os.environ.get('ALPHA_VANTAGE_API_KEY')  # Ajout env
+        if not self.api_key:
+            raise ValueError("API key manquante")
         self.base_url = "https://www.alphavantage.co/query"
-        self.rate_limit_delay = 12  # 5 calls per minute = 12 seconds between calls
+        self.rate_limit_delay = 12
         
+    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_tries=5)  # Ajout retry
     def _make_request(self, params: Dict) -> Dict:
         """Effectue une requête à l'API Alpha Vantage avec gestion du rate limiting"""
         params['apikey'] = self.api_key
