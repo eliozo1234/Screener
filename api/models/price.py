@@ -5,8 +5,8 @@ from datetime import datetime
 class Price(db.Model):
     __tablename__ = 'prices'
     
-    ticker_id = db.Column(db.Integer, db.ForeignKey('tickers.id'), primary_key=True)
-    date = db.Column(db.Date, primary_key=True)
+    ticker_id = db.Column(db.Integer, db.ForeignKey('tickers.id'), primary_key=True, index=True)  # Ajout index
+    date = db.Column(db.Date, primary_key=True, index=True)  # Ajout index
     adjusted_close = db.Column(db.Numeric(18, 4), nullable=False)
     volume = db.Column(db.BigInteger, nullable=False)
     high = db.Column(db.Numeric(18, 4), nullable=False)
@@ -28,4 +28,3 @@ class Price(db.Model):
             'open': float(self.open),
             'timestamp': self.timestamp.isoformat()
         }
-
