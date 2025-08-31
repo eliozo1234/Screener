@@ -2,8 +2,9 @@
   "version": 2,
   "builds": [
     {
-      "src": "app/public/**",
-      "use": "@vercel/static"
+      "src": "static/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "static/build" }
     },
     {
       "src": "api/main.py",
@@ -17,7 +18,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "app/public/index.html"
+      "dest": "/static/build/index.html"
     }
   ]
 }
