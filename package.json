@@ -11,7 +11,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "axios": "^1.7.7"  // Ajout pour appels API
+    "axios": "^1.7.7"
   },
-  "proxy": "http://localhost:5000"  // Ajout pour dev proxy vers backend
+  "proxy": "http://localhost:5000" 
 }
